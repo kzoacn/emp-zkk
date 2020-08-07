@@ -42,13 +42,18 @@ class CMPC { public:
 	block (*GT)[nP+1][4][nP+1];
 	block * eval_labels[nP+1];
 	PRP prp;
-	CMPC(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, CircuitFile * cf, int ssp = 40) {
+	PRG prg;
+
+
+	CMPC(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, CircuitFile * cf,int ssp = 40) {
 		this->party = party;
 		this->io = io[0];
 		this->cf = cf;
 		this->ssp = ssp;
 		this->pool = pool;
-
+		
+	
+	
 		for(int i = 0; i < cf->num_gate; ++i) {
 			if (cf->gates[4*i+3] == AND_GATE)
 				++num_ands;
@@ -81,6 +86,7 @@ class CMPC { public:
 		ANDS_value = new bool[num_ands*3];
 		preprocess_value = new bool[total_pre];
 		sigma_value = new bool[num_ands];
+
 	}
 	~CMPC() {
 		delete fpre;
@@ -107,7 +113,6 @@ class CMPC { public:
 		delete[] preprocess_value;
 		delete[] sigma_value;
 	}
-	PRG prg;
 
 	void function_independent() {
 		if(party != 1)

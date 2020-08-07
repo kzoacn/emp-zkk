@@ -20,7 +20,11 @@ class FpreMP { public:
 	PRG * prgs;
 	PRG prg;
 	int ssp;
+
+
 	FpreMP(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, int ssp = 40) {
+
+
 		this->party = party;
 		this->pool = pool;
 		this->io = io[0];
@@ -30,6 +34,8 @@ class FpreMP { public:
 		prps = new PRP[nP+1];
 		prps2 = new PRP[nP+1];
 		prgs = new PRG[nP+1];
+	
+	
 	}
 	~FpreMP(){
 		delete[] prps;

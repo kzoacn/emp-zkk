@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
 	file = circuit_file_location+"/sha-1.txt";
 	CircuitFile cf(file.c_str());
 
+
 	CMPC<RecIO,nP>* mpc = new CMPC<RecIO,nP>(ios, &pool, party, &cf);
 	cout <<"Setup:\t"<<party<<"\n";
 
@@ -35,7 +36,9 @@ int main(int argc, char** argv) {
 	
 	mpc->online(in, out);
 
-
+	char dig[64];
+	ios[0]->get(2,false)->recv_hash.digest(dig);
+	cout<<party<<" "<<string(dig)<<endl;
 
 	uint64_t band2 = io.count();
 	cout <<"bandwidth\t"<<party<<"\t"<<band2<<endl;
