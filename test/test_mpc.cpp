@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
 	file = circuit_file_location+"/sha-1.txt";
 	CircuitFile cf(file.c_str());
 
-
-	CMPC<RecIO,nP>* mpc = new CMPC<RecIO,nP>(ios, &pool, party, &cf);
+	PRG prng; block seed=makeBlock(1,2); prng.reseed(&seed);
+	CMPC<RecIO,nP>* mpc = new CMPC<RecIO,nP>(ios, &pool, party, &cf,prng);
 	cout <<"Setup:\t"<<party<<"\n";
 
 	mpc->function_independent();
@@ -36,8 +36,9 @@ int main(int argc, char** argv) {
 	
 	mpc->online(in, out);
 
-	char dig[64];
-	ios[0]->get(2,false)->recv_hash.digest(dig);
+	char dig[128];
+	memset(dig,0,sizeof dig);
+	ios[0]->get(2,false)->send_hash.digest(dig);
 	cout<<party<<" "<<string(dig)<<endl;
 
 	uint64_t band2 = io.count();

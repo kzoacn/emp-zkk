@@ -4,6 +4,7 @@
 #include "abitmp.h"
 #include "netmp.h"
 #include <emp-tool/emp-tool.h>
+#include <emp-tool/utils/hash.h>
 using namespace emp;
 
 template<class IO,int nP>
@@ -45,14 +46,16 @@ class CMPC { public:
 	PRG prg;
 
 
-	CMPC(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, CircuitFile * cf,int ssp = 40) {
+	CMPC(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, CircuitFile * cf,PRG &prng,int ssp = 40) {
 		this->party = party;
 		this->io = io[0];
 		this->cf = cf;
 		this->ssp = ssp;
 		this->pool = pool;
-		
-	
+ 
+		block seed;
+		prng.random_block(&seed,1);
+		prg.reseed(&seed);
 	
 		for(int i = 0; i < cf->num_gate; ++i) {
 			if (cf->gates[4*i+3] == AND_GATE)
@@ -60,7 +63,7 @@ class CMPC { public:
 		}
 		num_in = cf->n1+cf->n2;
 		total_pre = num_in + num_ands + 3*ssp;
-		fpre = new FpreMP<IO,nP>(io, pool, party, ssp);
+		fpre = new FpreMP<IO,nP>(io, pool, party, prng, ssp);
 		Delta = fpre->Delta;
 
 		if(party == 1) {
@@ -120,15 +123,31 @@ class CMPC { public:
 
 		fpre->compute(ANDS_mac, ANDS_key, ANDS_value, num_ands);
 
+
+
+
+
 		prg.random_bool(preprocess_value, total_pre);
+
+
+
 		fpre->abit->compute(preprocess_mac, preprocess_key, preprocess_value, total_pre);
+
+
+
+
 		auto ret = fpre->abit->check(preprocess_mac, preprocess_key, preprocess_value, total_pre);
 ret.get();
+
+
+	
 
 		for(int i = 1; i <= nP; ++i) {
 			memcpy(key[i], preprocess_key[i], num_in * sizeof(block));
 			memcpy(mac[i], preprocess_mac[i], num_in * sizeof(block));
 		}
+
+
 		memcpy(value, preprocess_value, num_in * sizeof(bool));
 #ifdef __debug
 		check_MAC<IO,nP>(io, ANDS_mac, ANDS_key, ANDS_value, Delta, num_ands*3, party);
@@ -326,6 +345,9 @@ ret.get();
 			}
 			joinNclean(res);
 		}
+
+
+
 		for(int i = 1; i <= nP; ++i) {
 			delete[] x[i];
 			delete[] y[i];

@@ -51,7 +51,7 @@ public:
 	block Delta;
 	int l = 128, ssp, sspover8;
 	const static int block_size = 1024;
-	DOT(IO * io, block * pretable, int ssp = 40) {
+	DOT(IO * io, block * pretable, PRG &prng,int ssp = 40) {
 		this->pre_table = pretable;
 		this->io = io;
 		this->ssp = ssp;
@@ -66,6 +66,17 @@ public:
 		this->tT = aalloc<block>(block_size*2);
 		this->t = aalloc<block>(block_size*2);
 		this->tmp = aalloc<block>(block_size/128);
+		
+		block seed;
+		prng.random_block(&seed,1);
+		prg.reseed(&seed);
+		for(int i=0;i<l;i++){
+			prng.random_block(&seed,1);
+			G0[i].reseed(&seed);
+			prng.random_block(&seed,1);
+			G1[i].reseed(&seed);	
+		}
+
 		memset(t, 0, block_size * 32);
 	}
 	static block * preTable(int ssp) {

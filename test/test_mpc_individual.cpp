@@ -23,8 +23,8 @@ int main(int argc, char** argv) {
 	string file = circuit_file_location+"/AES-non-expanded.txt";
 	file = circuit_file_location+"/sha-1.txt";
 	CircuitFile cf(file.c_str());
-
-	CMPC<NetIO,nP>* mpc = new CMPC<NetIO,nP>(ios, &pool, party, &cf);
+	PRG prng;
+	CMPC<NetIO,nP>* mpc = new CMPC<NetIO,nP>(ios, &pool, party, &cf,prng);
 	cout <<"Setup:\t"<<party<<"\n";
 
 	mpc->function_independent();

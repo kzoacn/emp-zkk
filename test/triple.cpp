@@ -17,7 +17,8 @@ int main(int argc, char** argv) {
 	NetIOMP<NetIO,nP> *ios[2] = {&io, &io2};
 
 	ThreadPool pool(2*(nP-1)+2);	
-	FpreMP<NetIO,nP> mp(ios, &pool, party);
+	PRG prng;
+	FpreMP<NetIO,nP> mp(ios, &pool,party,prng);
 
 	int num_ands = 1<<17;
 	block * mac[nP+1];

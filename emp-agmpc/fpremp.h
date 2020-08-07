@@ -22,20 +22,29 @@ class FpreMP { public:
 	int ssp;
 
 
-	FpreMP(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, int ssp = 40) {
+	FpreMP(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, PRG &prng,int ssp = 40) {
 
 
 		this->party = party;
 		this->pool = pool;
 		this->io = io[0];
 		this ->ssp = ssp;
-		abit = new ABitMP<IO,nP>(io[1], pool, party);
+		abit = new ABitMP<IO,nP>(io[1], pool, party,prng);
 		Delta = abit->Delta;
 		prps = new PRP[nP+1];
 		prps2 = new PRP[nP+1];
 		prgs = new PRG[nP+1];
 	
 	
+
+		block seed;
+		prng.random_block(&seed,1);
+		prg.reseed(&seed);
+		for(int i=1;i<=nP;i++){
+			prng.random_block(&seed,1);
+			prgs[i].reseed(&seed);
+		}
+			
 	}
 	~FpreMP(){
 		delete[] prps;
@@ -303,6 +312,7 @@ class FpreMP { public:
 				}
 		}
 		
+
 #ifdef __debug
 		check_MAC(io, MAC, KEY, r, Delta, length*3, party);
 		check_correctness(io, r, length, party);

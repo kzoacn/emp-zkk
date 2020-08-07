@@ -13,7 +13,8 @@ void bench_once(NetIOMP<NetIO,nP> * ios[2], ThreadPool * pool, string filename) 
 	CircuitFile cf(filename.c_str());
 
 	auto start = clock_start();
-	CMPC<NetIO,nP>* mpc = new CMPC<NetIO,nP>(ios, pool, party, &cf);
+	PRG prng;
+	CMPC<NetIO,nP>* mpc = new CMPC<NetIO,nP>(ios, pool, party, &cf,prng);
 	ios[0]->flush();
 	ios[1]->flush();
 	double t2 = time_from(start);

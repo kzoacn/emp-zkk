@@ -17,21 +17,26 @@ class ABitMP { public:
 	Hash hash;
 	int ssp;
 	block * pretable;
-	ABitMP(NetIOMP<IO,nP>* io, ThreadPool * pool, int party, int ssp = 40) {
+	ABitMP(NetIOMP<IO,nP>* io, ThreadPool * pool, int party, PRG &prng,int ssp = 40) {
 		this->ssp = ssp;
 		this->io = io;
 		this->pool = pool;
 		this->party = party;
+
+		block seed;
+		prng.random_block(&seed,1);
+		prg.reseed(&seed);
+
 		bool * tmp = new bool[128+ssp];
 		prg.random_bool(tmp, 128+ssp);
 		pretable = DOT<IO>::preTable(ssp);
 		for(int i = 1; i <= nP; ++i) for(int j = 1; j <= nP; ++j) if(i < j) {
 			if(i == party) {
-					abit1[j] = new DOT<IO>(io->get(j, false), pretable);
-					abit2[j] = new DOT<IO>(io->get(j, true), pretable);
+					abit1[j] = new DOT<IO>(io->get(j, false), pretable,prng);
+					abit2[j] = new DOT<IO>(io->get(j, true), pretable,prng);
 			} else if (j == party) {
-					abit2[i] = new DOT<IO>(io->get(i, false), pretable);
-					abit1[i] = new DOT<IO>(io->get(i, true), pretable);
+					abit2[i] = new DOT<IO>(io->get(i, false), pretable,prng);
+					abit1[i] = new DOT<IO>(io->get(i, true), pretable,prng);
 			}
 		}
 
