@@ -8,16 +8,16 @@ int party, port;
 int main(int argc, char** argv) {
 	parse_party_and_port(argv, &party, &port);
 	if(party > nP)return 0;
-	NetIOMP<nP> io(party, port);
+	NetIOMP<NetIO,nP> io(party, port);
 #ifdef LOCALHOST
-	NetIOMP<nP> io2(party, port+2*(nP+1)*(nP+1)+1);
+	NetIOMP<NetIO,nP> io2(party, port+2*(nP+1)*(nP+1)+1);
 #else
-	NetIOMP<nP> io2(party, port+2*(nP+1));
+	NetIOMP<IO,nP> io2(party, port+2*(nP+1));
 #endif
-	NetIOMP<nP> *ios[2] = {&io, &io2};
+	NetIOMP<NetIO,nP> *ios[2] = {&io, &io2};
 
 	ThreadPool pool(2*(nP-1)+2);	
-	FpreMP<nP> mp(ios, &pool, party);
+	FpreMP<NetIO,nP> mp(ios, &pool, party);
 
 	int num_ands = 1<<17;
 	block * mac[nP+1];

@@ -16,15 +16,15 @@ int main(int argc, char** argv) {
 	int start2[] = {0, 0, 64, 64};
 	int end2[] = {0, 64, 65, 512};
 
-	NetIOMP<nP> io(party, port);
-	NetIOMP<nP> io2(party, port+2*(nP+1)*(nP+1)+1);
-	NetIOMP<nP> *ios[2] = {&io, &io2};
+	NetIOMP<NetIO,nP> io(party, port);
+	NetIOMP<NetIO,nP> io2(party, port+2*(nP+1)*(nP+1)+1);
+	NetIOMP<NetIO,nP> *ios[2] = {&io, &io2};
 	ThreadPool pool(4);	
 	string file = circuit_file_location+"/AES-non-expanded.txt";
 	file = circuit_file_location+"/sha-1.txt";
 	CircuitFile cf(file.c_str());
 
-	CMPC<nP>* mpc = new CMPC<nP>(ios, &pool, party, &cf);
+	CMPC<NetIO,nP>* mpc = new CMPC<NetIO,nP>(ios, &pool, party, &cf);
 	cout <<"Setup:\t"<<party<<"\n";
 
 	mpc->function_independent();

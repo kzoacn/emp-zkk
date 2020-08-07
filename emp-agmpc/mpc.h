@@ -6,11 +6,11 @@
 #include <emp-tool/emp-tool.h>
 using namespace emp;
 
-template<int nP>
+template<class IO,int nP>
 class CMPC { public:
 	const static int SSP = 5;//5*8 in fact...
 	const block MASK = makeBlock(0x0ULL, 0xFFFFFULL);
-	FpreMP<nP>* fpre = nullptr;
+	FpreMP<IO,nP>* fpre = nullptr;
 	block* mac[nP+1];
 	block* key[nP+1];
 	bool* value;
@@ -30,7 +30,7 @@ class CMPC { public:
 	block * labels;
 	bool * mask = nullptr;
 	CircuitFile * cf;
-	NetIOMP<nP> * io;
+	NetIOMP<IO,nP> * io;
 	int num_ands = 0, num_in;
 	int party, total_pre, ssp;
 	ThreadPool * pool;
@@ -42,7 +42,7 @@ class CMPC { public:
 	block (*GT)[nP+1][4][nP+1];
 	block * eval_labels[nP+1];
 	PRP prp;
-	CMPC(NetIOMP<nP> * io[2], ThreadPool * pool, int party, CircuitFile * cf, int ssp = 40) {
+	CMPC(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, CircuitFile * cf, int ssp = 40) {
 		this->party = party;
 		this->io = io[0];
 		this->cf = cf;
@@ -55,7 +55,7 @@ class CMPC { public:
 		}
 		num_in = cf->n1+cf->n2;
 		total_pre = num_in + num_ands + 3*ssp;
-		fpre = new FpreMP<nP>(io, pool, party, ssp);
+		fpre = new FpreMP<IO,nP>(io, pool, party, ssp);
 		Delta = fpre->Delta;
 
 		if(party == 1) {
@@ -126,8 +126,8 @@ ret.get();
 		}
 		memcpy(value, preprocess_value, num_in * sizeof(bool));
 #ifdef __debug
-		check_MAC<nP>(io, ANDS_mac, ANDS_key, ANDS_value, Delta, num_ands*3, party);
-		check_correctness<nP>(io, ANDS_value, num_ands, party);
+		check_MAC<IO,nP>(io, ANDS_mac, ANDS_key, ANDS_value, Delta, num_ands*3, party);
+		check_correctness<IO,nP>(io, ANDS_value, num_ands, party);
 #endif
 //		ret.get();
 	}
@@ -173,7 +173,7 @@ ret.get();
 		}
 
 #ifdef __debug
-		check_MAC<nP>(io, mac, key, value, Delta, cf->num_wire, party);
+		check_MAC<IO,nP>(io, mac, key, value, Delta, cf->num_wire, party);
 #endif
 
 		ands = 0;
@@ -237,7 +237,7 @@ ret.get();
 			}
 		}//sigma_[] stores the and of input wires to each AND gates
 #ifdef __debug_
-		check_MAC<nP>(io, sigma_mac, sigma_key, sigma_value, Delta, num_ands, party);
+		check_MAC<IO,nP>(io, sigma_mac, sigma_key, sigma_value, Delta, num_ands, party);
 		ands = 0;
 		for(int i = 0; i < cf->num_gate; ++i) {
 			if (cf->gates[4*i+3] == AND_GATE) {

@@ -5,11 +5,11 @@
 #include "netmp.h"
 #include "helper.h"
 
-template<int nP>
+template<class IO,int nP>
 class ABitMP { public:
 	DeltaOT *abit1[nP+1];
 	DeltaOT *abit2[nP+1];
-	NetIOMP<nP> *io;
+	NetIOMP<IO,nP> *io;
 	ThreadPool * pool;
 	int party;
 	PRG prg;
@@ -17,7 +17,7 @@ class ABitMP { public:
 	Hash hash;
 	int ssp;
 	block * pretable;
-	ABitMP(NetIOMP<nP>* io, ThreadPool * pool, int party, int ssp = 40) {
+	ABitMP(NetIOMP<IO,nP>* io, ThreadPool * pool, int party, int ssp = 40) {
 		this->ssp = ssp;
 		this->io = io;
 		this->pool = pool;

@@ -115,8 +115,8 @@ inline uint8_t LSB(block & b) {
 	return _mm_extract_epi8(b, 0) & 0x1;
 }
 
-template<int nP>
-block sampleRandom(NetIOMP<nP> * io, PRG * prg, ThreadPool * pool, int party) {
+template<class IO,int nP>
+block sampleRandom(NetIOMP<IO,nP> * io, PRG * prg, ThreadPool * pool, int party) {
 	vector<future<void>> res;
 	vector<future<bool>> res2;
 	char (*dgst)[Hash::DIGEST_SIZE] = new char[nP+1][Hash::DIGEST_SIZE];
@@ -155,8 +155,8 @@ block sampleRandom(NetIOMP<nP> * io, PRG * prg, ThreadPool * pool, int party) {
 	return result;
 }
 
-template<int nP>
-void check_MAC(NetIOMP<nP> * io, block * MAC[nP+1], block * KEY[nP+1], bool * r, block Delta, int length, int party) {
+template<class IO,int nP>
+void check_MAC(NetIOMP<IO,nP> * io, block * MAC[nP+1], block * KEY[nP+1], bool * r, block Delta, int length, int party) {
 	block * tmp = new block[length];
 	block tD;
 	for(int i = 1; i <= nP; ++i) for(int j = 1; j <= nP; ++j) if (i < j) {
@@ -179,8 +179,8 @@ void check_MAC(NetIOMP<nP> * io, block * MAC[nP+1], block * KEY[nP+1], bool * r,
 		cerr<<"check_MAC pass!\n"<<flush; 
 }
 
-template<int nP>
-void check_correctness(NetIOMP<nP>* io, bool * r, int length, int party) {
+template<class IO,int nP>
+void check_correctness(NetIOMP<IO,nP>* io, bool * r, int length, int party) {
 	if (party == 1) {
 		bool * tmp1 = new bool[length*3];
 		bool * tmp2 = new bool[length*3];

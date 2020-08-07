@@ -4,10 +4,10 @@
 #include "cmpc_config.h"
 using namespace emp;
 
-template<int nP>
+template<class IO,int nP>
 class NetIOMP { public:
-	NetIO*ios[nP+1];
-	NetIO*ios2[nP+1];
+	IO*ios[nP+1];
+	IO*ios2[nP+1];
 	int party;
 	bool sent[nP+1];
 	NetIOMP(int party, int port) {

@@ -7,13 +7,13 @@ const string circuit_file_location = macro_xstr(EMP_CIRCUIT_PATH);
 
 const static int nP = 3;
 int party, port;
-void bench_once(NetIOMP<nP> * ios[2], ThreadPool * pool, string filename) {
+void bench_once(NetIOMP<NetIO,nP> * ios[2], ThreadPool * pool, string filename) {
 	if(party == 1)cout <<"CIRCUIT:\t"<<filename<<endl;
 	//string file = circuit_file_location+"/"+filename;
 	CircuitFile cf(filename.c_str());
 
 	auto start = clock_start();
-	CMPC<nP>* mpc = new CMPC<nP>(ios, pool, party, &cf);
+	CMPC<NetIO,nP>* mpc = new CMPC<NetIO,nP>(ios, pool, party, &cf);
 	ios[0]->flush();
 	ios[1]->flush();
 	double t2 = time_from(start);
@@ -50,13 +50,13 @@ void bench_once(NetIOMP<nP> * ios[2], ThreadPool * pool, string filename) {
 int main(int argc, char** argv) {
 	parse_party_and_port(argv, &party, &port);
 	if(party > nP)return 0;
-	NetIOMP<nP> io(party, port);
+	NetIOMP<NetIO,nP> io(party, port);
 #ifdef LOCALHOST
-	NetIOMP<nP> io2(party, port+2*(nP+1)*(nP+1)+1);
+	NetIOMP<NetIO,nP> io2(party, port+2*(nP+1)*(nP+1)+1);
 #else
-	NetIOMP<nP> io2(party, port+2*(nP+1));
+	NetIOMP<IO,nP> io2(party, port+2*(nP+1));
 #endif
-	NetIOMP<nP> *ios[2] = {&io, &io2};
+	NetIOMP<NetIO,nP> *ios[2] = {&io, &io2};
 	ThreadPool pool(2*(nP-1)+2);	
 
 	bench_once(ios, &pool, circuit_file_location+"sha-256.txt");

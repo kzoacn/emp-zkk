@@ -8,24 +8,24 @@
 #include "cmpc_config.h"
 
 using namespace emp;
-template<int nP>
+template<class IO,int nP>
 class FpreMP { public:
 	ThreadPool *pool;
 	int party;
-	NetIOMP<nP> * io;
-	ABitMP<nP>* abit;
+	NetIOMP<IO,nP> * io;
+	ABitMP<IO,nP>* abit;
 	block Delta;
 	PRP * prps;
 	PRP * prps2;
 	PRG * prgs;
 	PRG prg;
 	int ssp;
-	FpreMP(NetIOMP<nP> * io[2], ThreadPool * pool, int party, int ssp = 40) {
+	FpreMP(NetIOMP<IO,nP> * io[2], ThreadPool * pool, int party, int ssp = 40) {
 		this->party = party;
 		this->pool = pool;
 		this->io = io[0];
 		this ->ssp = ssp;
-		abit = new ABitMP<nP>(io[1], pool, party);
+		abit = new ABitMP<IO,nP>(io[1], pool, party);
 		Delta = abit->Delta;
 		prps = new PRP[nP+1];
 		prps2 = new PRP[nP+1];
@@ -227,7 +227,7 @@ class FpreMP { public:
 		if(!block_cmp(X[1], X[2], ssp)) error("AND check");
 	
 		//land -> and	
-		block S = sampleRandom<nP>(io, &prg, pool, party);
+		block S = sampleRandom<IO,nP>(io, &prg, pool, party);
 
 		int * ind = new int[length*bucket_size];
 		int *location = new int[length*bucket_size];
