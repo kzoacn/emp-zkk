@@ -1,5 +1,4 @@
-# EMP-agmpc [![Build Status](https://travis-ci.org/emp-toolkit/emp-agmpc.svg?branch=master)](https://travis-ci.org/emp-toolkit/emp-agmpc)
-## ZK[k]
+# EMP-zkk
 
 <img src="https://raw.githubusercontent.com/emp-toolkit/emp-readme/master/art/logo-full.jpg" width=300px/>
 
