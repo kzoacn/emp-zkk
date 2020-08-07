@@ -16,30 +16,30 @@ class NetIOMP { public:
 		for(int i = 1; i <= nP; ++i)for(int j = 1; j <= nP; ++j)if(i < j){
 			if(i == party) {
 #ifdef LOCALHOST
-				ios[j] = new NetIO(IP[j], port+2*(i*nP+j), true);
+				ios[j] = new IO(IP[j], port+2*(i*nP+j), true);
 #else
-				ios[j] = new NetIO(IP[j], port+2*(i), true);
+				ios[j] = new IO(IP[j], port+2*(i), true);
 #endif
 				ios[j]->set_nodelay();	
 
 #ifdef LOCALHOST
-				ios2[j] = new NetIO(nullptr, port+2*(i*nP+j)+1, true);
+				ios2[j] = new IO(nullptr, port+2*(i*nP+j)+1, true);
 #else
-				ios2[j] = new NetIO(nullptr, port+2*(j)+1, true);
+				ios2[j] = new IO(nullptr, port+2*(j)+1, true);
 #endif
 				ios2[j]->set_nodelay();	
 			} else if(j == party) {
 #ifdef LOCALHOST
-				ios[i] = new NetIO(nullptr, port+2*(i*nP+j), true);
+				ios[i] = new IO(nullptr, port+2*(i*nP+j), true);
 #else
-				ios[i] = new NetIO(nullptr, port+2*(i), true);
+				ios[i] = new IO(nullptr, port+2*(i), true);
 #endif
 				ios[i]->set_nodelay();	
 
 #ifdef LOCALHOST
-				ios2[i] = new NetIO(IP[i], port+2*(i*nP+j)+1, true);
+				ios2[i] = new IO(IP[i], port+2*(i*nP+j)+1, true);
 #else
-				ios2[i] = new NetIO(IP[i], port+2*(j)+1, true);
+				ios2[i] = new IO(IP[i], port+2*(j)+1, true);
 #endif
 				ios2[i]->set_nodelay();	
 			}
@@ -84,7 +84,7 @@ class NetIOMP { public:
 				ios2[src]->recv_data(data, len);
 		}
 	}
-	NetIO*& get(size_t idx, bool b = false){
+	IO*& get(size_t idx, bool b = false){
 		if (b)
 			return ios[idx];
 		else return ios2[idx];

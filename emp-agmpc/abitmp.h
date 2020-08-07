@@ -1,14 +1,14 @@
 #ifndef ABIT_MP_H__
 #define ABIT_MP_H__
 #include <emp-tool/emp-tool.h>
-#include <emp-ot/emp-ot.h>
+#include "emp-agmpc/DOT.hpp"
 #include "netmp.h"
 #include "helper.h"
 
 template<class IO,int nP>
 class ABitMP { public:
-	DeltaOT *abit1[nP+1];
-	DeltaOT *abit2[nP+1];
+	DOT<IO> *abit1[nP+1];
+	DOT<IO> *abit2[nP+1];
 	NetIOMP<IO,nP> *io;
 	ThreadPool * pool;
 	int party;
@@ -24,14 +24,14 @@ class ABitMP { public:
 		this->party = party;
 		bool * tmp = new bool[128+ssp];
 		prg.random_bool(tmp, 128+ssp);
-		pretable = DeltaOT::preTable(ssp);
+		pretable = DOT<IO>::preTable(ssp);
 		for(int i = 1; i <= nP; ++i) for(int j = 1; j <= nP; ++j) if(i < j) {
 			if(i == party) {
-					abit1[j] = new DeltaOT(io->get(j, false), pretable);
-					abit2[j] = new DeltaOT(io->get(j, true), pretable);
+					abit1[j] = new DOT<IO>(io->get(j, false), pretable);
+					abit2[j] = new DOT<IO>(io->get(j, true), pretable);
 			} else if (j == party) {
-					abit2[i] = new DeltaOT(io->get(i, false), pretable);
-					abit1[i] = new DeltaOT(io->get(i, true), pretable);
+					abit2[i] = new DOT<IO>(io->get(i, false), pretable);
+					abit1[i] = new DOT<IO>(io->get(i, true), pretable);
 			}
 		}
 

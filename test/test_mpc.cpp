@@ -1,4 +1,5 @@
 #include <emp-tool/emp-tool.h>
+#include "emp-agmpc/RecIO.hpp"
 #include "emp-agmpc/emp-agmpc.h"
 using namespace std;
 using namespace emp;
@@ -11,15 +12,15 @@ int main(int argc, char** argv) {
 	parse_party_and_port(argv, &party, &port);
 
 	const static int nP = 3;
-	NetIOMP<NetIO,nP> io(party, port);
-	NetIOMP<NetIO,nP> io2(party, port+2*(nP+1)*(nP+1)+1);
-	NetIOMP<NetIO,nP> *ios[2] = {&io, &io2};
+	NetIOMP<RecIO,nP> io(party, port);
+	NetIOMP<RecIO,nP> io2(party, port+2*(nP+1)*(nP+1)+1);
+	NetIOMP<RecIO,nP> *ios[2] = {&io, &io2};
 	ThreadPool pool(4);	
 	string file = circuit_file_location+"/AES-non-expanded.txt";
 	file = circuit_file_location+"/sha-1.txt";
 	CircuitFile cf(file.c_str());
 
-	CMPC<NetIO,nP>* mpc = new CMPC<NetIO,nP>(ios, &pool, party, &cf);
+	CMPC<RecIO,nP>* mpc = new CMPC<RecIO,nP>(ios, &pool, party, &cf);
 	cout <<"Setup:\t"<<party<<"\n";
 
 	mpc->function_independent();
@@ -30,7 +31,12 @@ int main(int argc, char** argv) {
 
 	bool in[512]; bool out[160];
 	memset(in, false, 512);
+	
+	
 	mpc->online(in, out);
+
+
+
 	uint64_t band2 = io.count();
 	cout <<"bandwidth\t"<<party<<"\t"<<band2<<endl;
 	cout <<"ONLINE:\t"<<party<<"\n";
