@@ -1,11 +1,19 @@
 #include <emp-tool/emp-tool.h>
 #include "emp-agmpc/RecIO.hpp"
+#include "emp-agmpc/RepIO.hpp"
 #include "emp-agmpc/emp-agmpc.h"
 using namespace std;
 using namespace emp;
 
 const string circuit_file_location = macro_xstr(EMP_CIRCUIT_PATH);
 static char out3[] = "92b404e556588ced6c1acd4ebf053f6809f73a93";//bafbc2c87c33322603f38e06c3e0f79c1f1b1475";
+
+
+
+
+
+
+
 
 int main(int argc, char** argv) {
 	int port, party;
@@ -22,42 +30,12 @@ int main(int argc, char** argv) {
 
 	PRG prng; block seed=makeBlock(0,0); prng.reseed(&seed);
 	CMPC<RecIO,nP>* mpc = new CMPC<RecIO,nP>(ios, &pool, party, &cf,prng);
-	cout <<"Setup:\t"<<party<<"\n";
 
 	mpc->function_independent();
-	cout <<"FUNC_IND:\t"<<party<<"\n";
-
 	mpc->function_dependent();
-	cout <<"FUNC_DEP:\t"<<party<<"\n";
-
 	bool in[512]; bool out[160];
-	memset(in, false, 512);
-	
-	
+	memset(in, false, 512);	
 	mpc->online(in, out);
-
-	int s=0;
-	for(int r=0;r<2;r++)
-	for(int j=1;j<=nP;j++){
-		if(party<j){
-			char dig[128];
-			memset(dig,0,sizeof dig);
-			
-			RecIO *in=ios[r]->get(j,false);
-			
-			if(!in)continue;
-
-			in->send_hash.digest(dig);
-			s=0;
-			for(int k=0;k<10;k++)
-				s+=j*dig[k];
-			cout<<party<<" "<<j<<" "<<s<<endl;
-		}
-	}
-
-	uint64_t band2 = io.count();
-	cout <<"bandwidth\t"<<party<<"\t"<<band2<<endl;
-	cout <<"ONLINE:\t"<<party<<"\n";
 	if(party == 1) {
 		string res = "";
 		for(int i = 0; i < cf.n3; ++i)
@@ -66,6 +44,71 @@ int main(int argc, char** argv) {
 		cout << res<<endl;
 		cout << (res == hex_to_binary(string(out3))? "GOOD!":"BAD!")<<endl<<flush;
 	}
+	
+	NetIOMP<RepIO,nP> rio(party, port);
+	NetIOMP<RepIO,nP> rio2(party, port+2*(nP+1)*(nP+1)+1);
+	NetIOMP<RepIO,nP> *rios[2] = {&rio, &rio2};
+
+	for(int i=1;i<=nP;i++){
+		if(i==party)continue;
+		if(io.ios[i])
+			rio.ios[i]->recv_rec=io.ios[i]->recv_rec;
+		if(io.ios2[i])
+			rio.ios2[i]->recv_rec=io.ios2[i]->recv_rec;
+
+		if(io2.ios[i])
+			rio2.ios[i]->recv_rec=io2.ios[i]->recv_rec;
+		if(io2.ios2[i])
+			rio2.ios2[i]->recv_rec=io2.ios2[i]->recv_rec;
+	}
+	
+
+
+	prng.reseed(&seed);
+	CMPC<RepIO,nP>* mpc2 = new CMPC<RepIO,nP>(rios, &pool, party, &cf,prng);
+
+	mpc2->function_independent();
+	mpc2->function_dependent();
+	memset(in, false, 512);	
+	mpc2->online(in, out);
+	if(party == 1) { 
+		string res = "";
+		for(int i = 0; i < cf.n3; ++i)
+			res += (out[i]?"1":"0");
+		cout << hex_to_binary(string(out3))<<endl;
+		cout << res<<endl;
+		cout << (res == hex_to_binary(string(out3))? "GOOD!":"BAD!")<<endl<<flush;
+	}
+
+
+/*	int s=0;
+	// party send to j    ios->get(j,party<j)
+	// party recv from j  ios->get(j,j<party)
+	for(int r=0;r<1;r++)
+	for(int j=1;j<=nP;j++){
+			if(j==party)continue;
+			char dig[128];
+			memset(dig,0,sizeof dig);
+			
+			RecIO *in=ios[r]->get(j,party<j);	
+			in->send_hash.digest(dig);
+			s=0;
+			for(int k=0;k<10;k++)
+				s+=dig[k];
+			cout<<party<<"->"<<j<<" "<<s<<endl;
+			
+
+
+			in=ios[r]->get(j,j<party);				
+			in->recv_hash.digest(dig);
+			s=0;
+			for(int k=0;k<10;k++)
+				s+=dig[k];
+			cout<<party<<"<-"<<j<<" "<<s<<endl;
+
+	}
+*/
+
 	delete mpc;
 	return 0;
 }
