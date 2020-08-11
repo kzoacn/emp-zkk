@@ -61,10 +61,15 @@ class CMPC { public:
 			if (cf->gates[4*i+3] == AND_GATE)
 				++num_ands;
 		}
+
 		num_in = cf->n1+cf->n2;
 		total_pre = num_in + num_ands + 3*ssp;
+
+
 		fpre = new FpreMP<IO,nP>(io, pool, party, prng, ssp);
 		Delta = fpre->Delta;
+		
+		
 
 		if(party == 1) {
 			GTM = new block[num_ands][4][nP+1];

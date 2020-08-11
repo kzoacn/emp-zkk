@@ -69,9 +69,11 @@ class RepIO: public IOChannel<RepIO> { public:
 	}
 
 	void recv_data(void  * data, int len) {
+		if(recv_cur+len>(int)recv_rec.size())
+			error("RepIO recv_data error!\n");
         recv_hash.put(data,len);
 		for(int i=0;i<len;i++){
-			((unsigned char*)data)[i]=recv_rec[recv_cur+i];
+			((unsigned char*)data)[i]=(unsigned char)recv_rec[recv_cur+i];
 		}
 		recv_cur+=len;
 	}

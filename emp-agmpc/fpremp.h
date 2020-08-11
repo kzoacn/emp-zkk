@@ -28,7 +28,7 @@ class FpreMP { public:
 		this->party = party;
 		this->pool = pool;
 		this->io = io[0];
-		this ->ssp = ssp;
+		this->ssp = ssp;
 		abit = new ABitMP<IO,nP>(io[1], pool, party,prng);
 		Delta = abit->Delta;
 		prps = new PRP[nP+1];

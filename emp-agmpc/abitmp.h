@@ -30,6 +30,7 @@ class ABitMP { public:
 		bool * tmp = new bool[128+ssp];
 		prg.random_bool(tmp, 128+ssp);
 		pretable = DOT<IO>::preTable(ssp);
+
 		for(int i = 1; i <= nP; ++i) for(int j = 1; j <= nP; ++j) if(i < j) {
 			if(i == party) {
 					abit1[j] = new DOT<IO>(io->get(j, false), pretable,prng);
@@ -62,8 +63,9 @@ class ABitMP { public:
 				}));
 			}
 		}
+ 
 		joinNclean(res);
-
+ 
 		if(party == 1)
 			Delta = abit1[2]->Delta;
 		else 
