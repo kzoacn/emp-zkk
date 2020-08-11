@@ -49,7 +49,8 @@ static char out3[] = "92b404e556588ced6c1acd4ebf053f6809f73a93";//bafbc2c87c3332
 
 */
 
-const static int nP = 3;
+const static int nP = 6;
+const int open_num=2;
  
 void prove_verify(bool *in,int in_len,block seed,NetIOMP<RecIO,nP> *ios[2],int party,int port){
 	const int verifier=nP+1;
@@ -59,6 +60,31 @@ void prove_verify(bool *in,int in_len,block seed,NetIOMP<RecIO,nP> *ios[2],int p
 
 
 	if(party<=nP){
+
+		Hash view_hash;
+		view_hash.put(in,in_len);
+		view_hash.put(&seed,sizeof(seed));
+
+		for(int r=0;r<2;r++)
+		for(int i=1;i<=nP;i++){
+			if(i==party)continue;
+			if(ios[r]->ios[i]){
+				auto &vec=ios[r]->ios[i]->recv_rec;
+				view_hash.put(vec.data(),vec.size());//TODO fix
+			}
+			if(ios[r]->ios2[i]){
+				auto &vec=ios[r]->ios2[i]->recv_rec;
+				view_hash.put(vec.data(),vec.size());
+			}
+		}				
+		char view_dig[Hash::DIGEST_SIZE];
+		view_hash.digest(view_dig);
+		io->send_data(verifier,view_dig,Hash::DIGEST_SIZE);
+
+		bool check=false;
+		io->recv_data(verifier,&check,1);
+		if(!check)return ;
+
 		io->send_data(verifier,in,in_len);
 		io->send_data(verifier,&seed,sizeof(seed));
 
@@ -85,17 +111,53 @@ void prove_verify(bool *in,int in_len,block seed,NetIOMP<RecIO,nP> *ios[2],int p
 
 	}else{
 		bool input[512];
-		for(int p=2;p<=nP;p++){
-			io->recv_data(p,input,512);
+		cout<<"verifying"<<endl;
+
+		PRG prg;
+		bool check[nP+1];
+		memset(check,0,sizeof(check));
+		for(int i=1;i<=open_num;i++)
+			check[i]=1;
+		for(int i=2;i<=nP;i++){
+			unsigned int x;
+			prg.random_data(&x,sizeof(x));
+			swap(check[i],check[x%i+1]);
+		}
+
+		char view_dig[nP+1][Hash::DIGEST_SIZE];
+		
+		char send_dig[nP+1][nP+1][Hash::DIGEST_SIZE];
+		char recv_dig[nP+1][nP+1][Hash::DIGEST_SIZE];
+
+		for(int p=1;p<=nP;p++){
+			io->recv_data(p,view_dig[p],Hash::DIGEST_SIZE);
+			
+		}
+		for(int p=1;p<=nP;p++){
+			io->send_data(p,&check[p],1);
+		}
+		
+		/*char dig[nP+1][Hash::DIGEST_SIZE];
+		for(int i=1;i<=nP;i++){
+			io->recv_data(i,dig[i],Hash::DIGEST_SIZE);
+		}*/
+
+
+		for(int p=1;p<=nP;p++)if(check[p]){
+
+			Hash view_hash;
+
+			io->recv_data(p,input,in_len);
+			view_hash.put(input,in_len);
 			block sed;
 			io->recv_data(p,&sed,sizeof(sed));
+			view_hash.put(&sed,sizeof(sed));
 			PRG prng;prng.reseed(&sed);
 
 
 			NetIOMP<RepIO,nP> rio(p, port);
 			NetIOMP<RepIO,nP> rio2(p, port+2*(nP+1)*(nP+1)+1);
 			NetIOMP<RepIO,nP> *rios[2] = {&rio, &rio2};
-
 
 
 
@@ -109,6 +171,7 @@ void prove_verify(bool *in,int in_len,block seed,NetIOMP<RecIO,nP> *ios[2],int p
 					io->recv_data(p,&len,sizeof(len)); 
 					vec.resize(len);
 					io->recv_data(p,vec.data(),len);
+					view_hash.put(vec.data(),len);
 				}
 				if(rios[r]->ios2[i]){
 					auto &vec=rios[r]->ios2[i]->recv_rec;
@@ -117,7 +180,32 @@ void prove_verify(bool *in,int in_len,block seed,NetIOMP<RecIO,nP> *ios[2],int p
 					io->recv_data(p,&len,sizeof(len)); 
 					vec.resize(len);
 					io->recv_data(p,vec.data(),len);
+					view_hash.put(vec.data(),len);
 				}
+			}
+
+			for(int i=1;i<=nP;i++)if(i!=p){
+				Hash hash;
+				char tmp[Hash::DIGEST_SIZE];
+				for(int r=0;r<2;r++){
+					rios[r]->get(i,p<i)->send_hash.digest(tmp);
+					hash.put(tmp,Hash::DIGEST_SIZE);
+				}
+				hash.digest(send_dig[p][i]);
+				
+				hash.reset();
+				for(int r=0;r<2;r++){
+					rios[r]->get(i,i<p)->recv_hash.digest(tmp);
+					hash.put(tmp,Hash::DIGEST_SIZE);
+				}
+				hash.digest(recv_dig[i][p]);
+			}
+
+
+			char v_dig[Hash::DIGEST_SIZE];
+			view_hash.digest(v_dig);
+			if(memcmp(v_dig,view_dig[p],Hash::DIGEST_SIZE)!=0){
+				cerr<<"party "<<p<<" commitment is inconsistent"<<endl;
 			}
  
 
@@ -135,18 +223,26 @@ void prove_verify(bool *in,int in_len,block seed,NetIOMP<RecIO,nP> *ios[2],int p
 
 			bool out[160];
 			mpc2->online(input, out);
+
 			if(1) { 
 				string res = "";
 				for(int i = 0; i < cf.n3; ++i)
 					res += (out[i]?"1":"0");
 				//cout << hex_to_binary(string(out3))<<endl;
 				//cout << res<<endl;
-				cout << p<<" "<<(res == hex_to_binary(string(out3))? "GOOD!":"BAD!")<<endl<<flush;
+				cout << p<<" "<<(res == hex_to_binary(string(out3))? "f(r,w)=View ... yes":"no!")<<endl<<flush;
 			}
 
 
 		}
+		for(int i=1;i<=nP;i++)
+		for(int j=1;j<=nP;j++)if(i!=j&&check[i]&&check[j]){
+			if(memcmp(send_dig[i][j],recv_dig[i][j],Hash::DIGEST_SIZE)!=0){
+				cerr<<i<<" "<<j<<" send/recv inconsistent"<<endl;	
+			}
+		}
 
+		puts("finish");
 	}
 
 
@@ -159,7 +255,7 @@ int main(int argc, char** argv) {
 
 
 	if(party==nP+1){
-		prove_verify(0,0,zero_block(),0,party,port);
+		prove_verify(0,512,zero_block(),0,party,port);
 		return 0;
 	}
 
@@ -183,8 +279,8 @@ int main(int argc, char** argv) {
 		string res = "";
 		for(int i = 0; i < cf.n3; ++i)
 			res += (out[i]?"1":"0");
-		cout << hex_to_binary(string(out3))<<endl;
-		cout << res<<endl;
+		//cout << hex_to_binary(string(out3))<<endl;
+		//cout << res<<endl;
 		cout << (res == hex_to_binary(string(out3))? "GOOD!":"BAD!")<<endl<<flush;
 	}
 

@@ -447,6 +447,7 @@ ret.get();
 		if(party != 1) {
 			io->send_data(1, value+cf->num_wire - cf->n3, cf->n3);
 			io->flush(1);
+			io->recv_data(1,output,cf->n3);
 		} else {
 			vector<future<void>> res;
 			bool * tmp[nP+1];
@@ -467,6 +468,10 @@ ret.get();
 
 			for(int i = 2; i <= nP; ++i) delete[] tmp[i];
 			memcpy(output, mask_input + cf->num_wire - cf->n3, cf->n3);
+			for(int i=2;i<=nP;i++){
+				io->send_data(i,output,cf->n3);
+				io->flush(i);
+			}
 		}
 		delete[] mask_input;
 	}
