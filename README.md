@@ -12,4 +12,5 @@
 
 ## Test
 
+./run ./bin/test_mpc
 
